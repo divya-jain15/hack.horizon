@@ -1,110 +1,1293 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Quorum — Group Decision Swipe</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="[fonts.googleapis.com](https://fonts.googleapis.com)">
-    <link rel="preconnect" href="[fonts.gstatic.com](https://fonts.gstatic.com)" crossorigin>
-    <link href="[fonts.googleapis.com](https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap)" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Quorum</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Mono:wght@300;400&family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  /* ===== DESIGN TOKENS ===== */
+  :root {
+    --bg: #0a0a0b;
+    --surface: #111115;
+    --surface2: #1a1a22;
+    --border: #2a2a35;
+    --gold: #c9a84c;
+    --gold-dim: #7a5f28;
+    --gold-glow: rgba(201,168,76,0.18);
+    --love: #e05c6a;
+    --love-glow: rgba(224,92,106,0.2);
+    --yes: #5cb8a0;
+    --yes-glow: rgba(92,184,160,0.2);
+    --no: #6b6b80;
+    --text: #e8e8f0;
+    --text-dim: #7a7a90;
+    --text-muted: #3a3a50;
+    --font-display: 'Playfair Display', serif;
+    --font-mono: 'DM Mono', monospace;
+    --font-body: 'Outfit', sans-serif;
+    --radius: 16px;
+    --card-w: 320px;
+    --card-h: 440px;
+  }
+
+  /* ===== RESET & BASE ===== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 9999;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    opacity: 0.35;
+  }
+
+  /* ===== SECTIONS ===== */
+  .section {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 24px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.5s ease;
+  }
+  .section.active {
+    opacity: 1; pointer-events: all;
+  }
+
+  /* ===== LOGO ===== */
+  .logo {
+    font-family: var(--font-display);
+    font-size: 13px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold);
+    position: fixed; top: 20px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    white-space: nowrap;
+  }
+  .logo span { color: var(--text-dim); }
+
+  /* ===== REGISTRATION ===== */
+  #reg-section {
+    gap: 32px;
+  }
+  .reg-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 40px;
+    width: 100%;
+    max-width: 460px;
+    position: relative;
+    overflow: hidden;
+  }
+  .reg-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .reg-title {
+    font-family: var(--font-display);
+    font-size: 28px;
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+  .reg-subtitle {
+    color: var(--text-dim);
+    font-size: 13px;
+    font-family: var(--font-mono);
+    margin-bottom: 28px;
+    letter-spacing: 0.05em;
+  }
+  .player-fields { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+  .player-row {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .player-num {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--gold);
+    width: 20px; flex-shrink: 0;
+    opacity: 0.7;
+  }
+  .player-input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .player-input::placeholder { color: var(--text-muted); }
+  .player-input:focus {
+    border-color: var(--gold-dim);
+    box-shadow: 0 0 0 3px var(--gold-glow);
+  }
+  .player-input.optional { opacity: 0.6; }
+  .player-input.optional:focus { opacity: 1; }
+  .add-player-btn {
+    background: none; border: 1px dashed var(--border);
+    border-radius: 8px; padding: 9px 14px;
+    color: var(--text-dim); font-family: var(--font-mono);
+    font-size: 12px; cursor: pointer; width: 100%;
+    transition: border-color 0.2s, color 0.2s;
+    letter-spacing: 0.05em;
+  }
+  .add-player-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
+  .start-btn {
+    width: 100%; padding: 14px;
+    background: var(--gold);
+    color: #000; font-family: var(--font-body);
+    font-weight: 600; font-size: 15px;
+    border: none; border-radius: 10px;
+    cursor: pointer; letter-spacing: 0.05em;
+    transition: opacity 0.2s, transform 0.1s;
+    position: relative; overflow: hidden;
+  }
+  .start-btn::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.1), transparent);
+  }
+  .start-btn:hover { opacity: 0.92; }
+  .start-btn:active { transform: scale(0.98); }
+  .movie-count-badge {
+    position: absolute; top: 16px; right: 16px;
+    font-family: var(--font-mono);
+    font-size: 11px; color: var(--text-dim);
+    letter-spacing: 0.05em;
+  }
+
+  /* ===== HANDOFF SCREEN ===== */
+  #handoff-section {
+    gap: 20px; text-align: center;
+  }
+  .handoff-inner {
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+  }
+  .handoff-tag {
+    font-family: var(--font-mono); font-size: 12px;
+    letter-spacing: 0.2em; color: var(--gold); text-transform: uppercase;
+  }
+  .handoff-name {
+    font-family: var(--font-display); font-size: 42px;
+    line-height: 1.1;
+  }
+  .handoff-sub {
+    color: var(--text-dim); font-size: 14px; max-width: 300px;
+  }
+  .handoff-progress {
+    display: flex; gap: 6px; margin-top: 8px;
+  }
+  .handoff-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--border);
+    transition: background 0.3s;
+  }
+  .handoff-dot.done { background: var(--gold); }
+  .handoff-dot.active { background: var(--text); }
+  .handoff-btn {
+    margin-top: 16px;
+    padding: 13px 36px;
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold); border-radius: 8px;
+    font-family: var(--font-mono); font-size: 13px;
+    letter-spacing: 0.1em; cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+  .handoff-btn:hover { background: var(--gold-glow); }
+
+  /* ===== VOTING SECTION ===== */
+  #vote-section { gap: 0; }
+
+  .vote-header {
+    position: fixed; top: 0; left: 0; right: 0;
+    padding: 16px 20px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    z-index: 50;
+    background: linear-gradient(to bottom, var(--bg) 60%, transparent);
+  }
+  .vote-player {
+    font-family: var(--font-mono); font-size: 12px;
+    color: var(--gold); letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .vote-progress-bar {
+    flex: 1; height: 2px;
+    background: var(--border); border-radius: 2px;
+    margin: 0 16px; overflow: hidden;
+  }
+  .vote-progress-fill {
+    height: 100%; background: var(--gold);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+    width: 0%;
+  }
+  .vote-count {
+    font-family: var(--font-mono); font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  /* Card stack */
+  .card-arena {
+    position: relative;
+    width: var(--card-w); height: var(--card-h);
+    margin-top: 60px;
+  }
+
+  .movie-card {
+    position: absolute; inset: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: grab;
+    user-select: none;
+    touch-action: none;
+    will-change: transform;
+    transition: box-shadow 0.2s;
+  }
+  .movie-card:active { cursor: grabbing; }
+  .movie-card.is-top { z-index: 10; }
+  .movie-card.behind-1 { z-index: 9; transform: translateY(6px) scale(0.97); }
+  .movie-card.behind-2 { z-index: 8; transform: translateY(12px) scale(0.94); }
+
+  .card-poster {
+    width: 100%; height: 240px;
+    background: var(--surface2);
+    position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .card-poster-bg {
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, var(--surface2), var(--bg));
+  }
+  .card-poster-icon {
+    font-size: 64px; position: relative; z-index: 1;
+    opacity: 0.4;
+  }
+  .card-genre-badge {
+    position: absolute; top: 12px; left: 12px;
+    background: rgba(0,0,0,0.6);
+    border: 1px solid var(--border);
+    border-radius: 20px; padding: 4px 10px;
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.1em; color: var(--text-dim);
+    backdrop-filter: blur(8px);
+  }
+  .card-year-badge {
+    position: absolute; top: 12px; right: 12px;
+    background: rgba(0,0,0,0.6);
+    border: 1px solid var(--border);
+    border-radius: 20px; padding: 4px 10px;
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--text-dim);
+    backdrop-filter: blur(8px);
+  }
+  .card-body { padding: 20px; }
+  .card-title {
+    font-family: var(--font-display);
+    font-size: 20px; line-height: 1.2;
+    margin-bottom: 4px;
+  }
+  .card-dir {
+    font-size: 12px; color: var(--text-dim);
+    margin-bottom: 12px; font-family: var(--font-mono);
+  }
+  .card-meta {
+    display: flex; gap: 16px;
+  }
+  .card-meta-item {
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .card-meta-label {
+    font-size: 10px; color: var(--text-muted);
+    font-family: var(--font-mono); letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .card-meta-val {
+    font-size: 13px; color: var(--text-dim);
+    font-family: var(--font-mono);
+  }
+
+  /* Swipe overlays */
+  .swipe-indicator {
+    position: absolute; inset: 0;
+    border-radius: var(--radius);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.1s;
+  }
+  .swipe-indicator.love {
+    background: linear-gradient(135deg, transparent 30%, var(--love-glow));
+    border: 2px solid var(--love);
+  }
+  .swipe-indicator.yes {
+    background: linear-gradient(225deg, transparent 30%, var(--yes-glow));
+    border: 2px solid var(--yes);
+  }
+  .swipe-indicator.no {
+    background: linear-gradient(45deg, rgba(107,107,128,0.15), transparent);
+    border: 2px solid var(--no);
+  }
+  .swipe-label {
+    position: absolute;
+    font-family: var(--font-display); font-size: 24px;
+    font-style: italic; letter-spacing: 0.05em;
+    opacity: 0; transition: opacity 0.1s;
+    pointer-events: none;
+  }
+  .swipe-label.love { top: 20px; right: 20px; color: var(--love); }
+  .swipe-label.yes { top: 20px; left: 20px; color: var(--yes); }
+  .swipe-label.no { bottom: 20px; left: 20px; color: var(--no); }
+
+  /* Action buttons */
+  .action-bar {
+    display: flex; gap: 16px; margin-top: 28px;
+    align-items: center;
+  }
+  .action-btn {
+    width: 56px; height: 56px; border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 22px;
+    transition: transform 0.15s, border-color 0.2s, box-shadow 0.2s;
+    position: relative; overflow: hidden;
+  }
+  .action-btn::before {
+    content: ''; position: absolute; inset: 0; border-radius: 50%; opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .action-btn:hover { transform: scale(1.08); }
+  .action-btn:active { transform: scale(0.95); }
+  .action-btn.no-btn { border-color: var(--no); }
+  .action-btn.no-btn::before { background: rgba(107,107,128,0.15); }
+  .action-btn.no-btn:hover::before { opacity: 1; }
+  .action-btn.yes-btn { width: 68px; height: 68px; border-color: var(--yes); }
+  .action-btn.yes-btn::before { background: var(--yes-glow); }
+  .action-btn.yes-btn:hover::before { opacity: 1; }
+  .action-btn.love-btn { border-color: var(--love); }
+  .action-btn.love-btn::before { background: var(--love-glow); }
+  .action-btn.love-btn:hover::before { opacity: 1; }
+
+  .action-hint {
+    position: absolute; bottom: 8px;
+    font-family: var(--font-mono); font-size: 8px;
+    letter-spacing: 0.05em; color: var(--text-muted);
+    width: 100%; text-align: center;
+  }
+
+  .vote-tip {
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--text-muted); margin-top: 16px;
+    letter-spacing: 0.05em;
+    text-align: center; max-width: 260px;
+  }
+
+  /* ===== REVEAL / COUNTDOWN ===== */
+  #reveal-section { gap: 24px; text-align: center; }
+  .reveal-text {
+    font-family: var(--font-display); font-size: 14px;
+    letter-spacing: 0.3em; text-transform: uppercase;
+    color: var(--gold); font-style: italic;
+  }
+  .reveal-countdown {
+    font-family: var(--font-display); font-size: 110px;
+    line-height: 1; color: var(--text);
+    animation: pulse-num 1s ease-in-out infinite;
+  }
+  @keyframes pulse-num {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.08); opacity: 0.85; }
+  }
+  .reveal-sub {
+    font-family: var(--font-mono); font-size: 12px;
+    color: var(--text-dim); letter-spacing: 0.15em;
+  }
+
+  /* ===== RESULTS ===== */
+  #results-section {
+    overflow-y: auto; overflow-x: hidden;
+    align-items: flex-start;
+    padding: 80px 20px 40px;
+    gap: 32px;
+    justify-content: flex-start;
+  }
+  .results-inner {
+    width: 100%; max-width: 700px;
+    margin: 0 auto;
+    display: flex; flex-direction: column; gap: 32px;
+  }
+  .results-header {
+    text-align: center;
+  }
+  .results-eyebrow {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.25em; color: var(--gold);
+    text-transform: uppercase; margin-bottom: 8px;
+  }
+  .results-title {
+    font-family: var(--font-display); font-size: 36px;
+  }
+
+  /* Podium */
+  .podium { display: flex; gap: 12px; align-items: flex-end; justify-content: center; }
+  .podium-item {
+    flex: 1; max-width: 180px;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+  }
+  .podium-medal { font-size: 26px; }
+  .podium-card {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 12px; text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .podium-card.first {
+    border-color: var(--gold);
+    box-shadow: 0 0 30px var(--gold-glow);
+  }
+  .podium-card.first::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .podium-card.second { border-color: #888; }
+  .podium-card.third { border-color: #7a5540; }
+  .podium-rank {
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--text-muted); letter-spacing: 0.1em; margin-bottom: 4px;
+  }
+  .podium-title {
+    font-family: var(--font-display); font-size: 14px;
+    line-height: 1.2; margin-bottom: 8px;
+  }
+  .podium-score {
+    font-family: var(--font-mono); font-size: 20px;
+    color: var(--gold);
+  }
+  .podium-score-label {
+    font-family: var(--font-mono); font-size: 9px;
+    color: var(--text-muted); letter-spacing: 0.1em;
+  }
+  .podium-height { background: var(--surface2); border-radius: 4px 4px 0 0; width: 4px; }
+
+  /* Full ranking table */
+  .ranking-section {}
+  .ranking-label {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.15em; color: var(--text-dim);
+    text-transform: uppercase; margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .ranking-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .ranking-row:last-child { border-bottom: none; }
+  .rank-num {
+    font-family: var(--font-mono); font-size: 12px;
+    color: var(--text-muted); width: 20px; text-align: right;
+  }
+  .rank-title { flex: 1; font-size: 14px; }
+  .rank-genre {
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--text-muted); letter-spacing: 0.05em;
+  }
+  .rank-votes { display: flex; gap: 6px; align-items: center; }
+  .vote-chip {
+    font-family: var(--font-mono); font-size: 10px;
+    padding: 2px 7px; border-radius: 12px;
+  }
+  .vote-chip.love { background: var(--love-glow); color: var(--love); }
+  .vote-chip.yes { background: var(--yes-glow); color: var(--yes); }
+  .rank-score {
+    font-family: var(--font-mono); font-size: 14px;
+    color: var(--gold); width: 28px; text-align: right;
+  }
+
+  /* Sentiment matrix */
+  .matrix-section {}
+  .matrix-label {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.15em; color: var(--text-dim);
+    text-transform: uppercase; margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .matrix-table { width: 100%; border-collapse: collapse; }
+  .matrix-table th {
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.08em; color: var(--text-muted);
+    text-transform: uppercase; padding: 6px 8px;
+    text-align: center; font-weight: 400;
+  }
+  .matrix-table th.movie-col { text-align: left; }
+  .matrix-table td {
+    padding: 8px 8px; font-size: 13px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+  }
+  .matrix-table td.movie-name {
+    text-align: left;
+    font-family: var(--font-display); font-size: 12px;
+    color: var(--text-dim);
+    max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .sentiment-dot {
+    display: inline-block; width: 24px; height: 24px;
+    border-radius: 50%; line-height: 24px; font-size: 13px;
+  }
+  .sentiment-dot.love { background: var(--love-glow); }
+  .sentiment-dot.yes { background: var(--yes-glow); }
+  .sentiment-dot.no { background: rgba(107,107,128,0.1); }
+
+  /* Reset btn */
+  .reset-btn {
+    margin: 0 auto; display: block;
+    padding: 12px 32px;
+    background: transparent; border: 1px solid var(--border);
+    color: var(--text-dim); border-radius: 8px;
+    font-family: var(--font-mono); font-size: 12px;
+    letter-spacing: 0.1em; cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .reset-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
+
+  /* ===== CONFETTI ===== */
+  #confetti-canvas {
+    position: fixed; inset: 0; z-index: 200;
+    pointer-events: none;
+  }
+
+  /* ===== ANIMATIONS ===== */
+  @keyframes fly-out-right {
+    to { transform: translateX(120vw) rotate(25deg); opacity: 0; }
+  }
+  @keyframes fly-out-left {
+    to { transform: translateX(-120vw) rotate(-25deg); opacity: 0; }
+  }
+  @keyframes fly-out-up {
+    to { transform: translateY(-120vh) scale(0.8); opacity: 0; }
+  }
+  @keyframes snap-back {
+    to { transform: none; }
+  }
+  .fly-right { animation: fly-out-right 0.4s cubic-bezier(0.4,0,1,1) forwards; }
+  .fly-left  { animation: fly-out-left  0.4s cubic-bezier(0.4,0,1,1) forwards; }
+  .fly-up    { animation: fly-out-up    0.4s cubic-bezier(0.4,0,1,1) forwards; }
+  .snap      { animation: snap-back 0.4s cubic-bezier(0.175,0.885,0.32,1.275) forwards; }
+
+  @keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .fade-in-up { animation: fade-in-up 0.5s ease forwards; }
+
+  /* Staggered results items */
+  .ranking-row { opacity: 0; }
+  .ranking-row.visible {
+    animation: fade-in-up 0.4s ease forwards;
+  }
+
+  /* ===== SCROLLBAR ===== */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
 </head>
 <body>
-    <div class="app-container">
-        <!-- Start Screen -->
-        <section id="start-screen" class="screen active">
-            <div class="screen-content">
-                <div class="logo-container">
-                    <h1 class="logo">Quorum</h1>
-                    <p class="tagline">Swipe together. Decide together.</p>
-                </div>
-                
-                <div class="players-section">
-                    <h2>Add Players</h2>
-                    <p class="hint">2–5 players required</p>
-                    
-                    <div id="players-list" class="players-list"></div>
-                    
-                    <div class="add-player-row">
-                        <input type="text" id="player-input" placeholder="Enter name..." maxlength="20">
-                        <button id="add-player-btn" class="btn-icon" aria-label="Add player">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="12" y1="5" x2="12" y2="19"></line>
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                            </svg>
-                        </button>
-                    </div>
-                    
-                    <p id="player-count" class="player-count">0 / 5 players</p>
-                </div>
-                
-                <button id="start-btn" class="btn-primary" disabled>Start Session</button>
-            </div>
-        </section>
 
-        <!-- Voting Screen -->
-        <section id="voting-screen" class="screen">
-            <div class="screen-content">
-                <div class="voting-header">
-                    <h2 id="current-player-name" class="player-turn"></h2>
-                    <div id="progress-indicator" class="progress-indicator"></div>
-                </div>
-                
-                <div class="swipe-hints">
-                    <span class="hint-left">← NO</span>
-                    <span class="hint-up">↑ LOVE</span>
-                    <span class="hint-right">YES →</span>
-                </div>
-                
-                <div id="card-stack" class="card-stack"></div>
-                
-                <div class="swipe-feedback">
-                    <div id="feedback-no" class="feedback-overlay feedback-no">
-                        <span>✕</span>
-                    </div>
-                    <div id="feedback-yes" class="feedback-overlay feedback-yes">
-                        <span>✓</span>
-                    </div>
-                    <div id="feedback-love" class="feedback-overlay feedback-love">
-                        <span>♥</span>
-                    </div>
-                </div>
-            </div>
-        </section>
+<canvas id="confetti-canvas"></canvas>
 
-        <!-- Player Transition Screen -->
-        <section id="transition-screen" class="screen">
-            <div class="screen-content transition-content">
-                <p class="transition-text">Pass the device to</p>
-                <h2 id="next-player-name" class="next-player-name"></h2>
-                <button id="start-turn-btn" class="btn-primary">Start My Turn</button>
-            </div>
-        </section>
+<div class="logo">PROJECT <span>QUORUM</span></div>
 
-        <!-- Countdown Screen -->
-        <section id="countdown-screen" class="screen">
-            <div class="screen-content countdown-content">
-                <p class="calculating-text">Calculating results...</p>
-                <div id="countdown-number" class="countdown-number">3</div>
-            </div>
-        </section>
+<!-- REGISTRATION -->
+<section class="section active" id="reg-section">
+  <div class="reg-card">
+    <div class="movie-count-badge" id="movie-count-badge">38 FILMS</div>
+    <div class="reg-title">Who's watching?</div>
+    <div class="reg-subtitle">// 2–5 participants · enter names below</div>
+    <div class="player-fields" id="player-fields">
+      <div class="player-row">
+        <span class="player-num">01</span>
+        <input class="player-input" type="text" placeholder="Player one" maxlength="20">
+      </div>
+      <div class="player-row">
+        <span class="player-num">02</span>
+        <input class="player-input" type="text" placeholder="Player two" maxlength="20">
+      </div>
+      <div class="player-row">
+        <span class="player-num">03</span>
+        <input class="player-input optional" type="text" placeholder="Optional" maxlength="20">
+      </div>
+    </div>
+    <button class="add-player-btn" id="add-player-btn">+ ADD PLAYER</button>
+    <br><br>
+    <button class="start-btn" id="start-btn">BEGIN THE QUORUM →</button>
+  </div>
+</section>
 
-        <!-- Results Screen -->
-        <section id="results-screen" class="screen">
-            <div class="screen-content results-content">
-                <h2 class="results-title">The Winner</h2>
-                
-                <div id="winner-card" class="winner-card"></div>
-                
-                <div id="top-results" class="top-results"></div>
-                
-                <button id="restart-btn" class="btn-secondary">Start New Session</button>
-            </div>
-            
-            <canvas id="confetti-canvas"></canvas>
-        </section>
+<!-- HANDOFF / PLAYER TRANSITION -->
+<section class="section" id="handoff-section">
+  <div class="handoff-inner">
+    <div class="handoff-tag">NEXT UP</div>
+    <div class="handoff-name" id="handoff-name">Player</div>
+    <div class="handoff-sub">Pass the device. When ready, tap below to start your round.</div>
+    <div class="handoff-progress" id="handoff-progress"></div>
+    <button class="handoff-btn" id="handoff-btn">I'M READY →</button>
+  </div>
+</section>
+
+<!-- VOTING -->
+<section class="section" id="vote-section">
+  <div class="vote-header">
+    <div class="vote-player" id="vote-player-name">—</div>
+    <div class="vote-progress-bar">
+      <div class="vote-progress-fill" id="vote-progress-fill"></div>
+    </div>
+    <div class="vote-count" id="vote-count">0 / 0</div>
+  </div>
+
+  <div class="card-arena" id="card-arena"></div>
+
+  <div class="action-bar">
+    <button class="action-btn no-btn" id="btn-no" title="Skip">
+      ✕
+      <span class="action-hint">SKIP</span>
+    </button>
+    <button class="action-btn yes-btn" id="btn-yes" title="Yes">
+      👍
+      <span class="action-hint">YES  +1</span>
+    </button>
+    <button class="action-btn love-btn" id="btn-love" title="Love it">
+      ❤️
+      <span class="action-hint">LOVE +3</span>
+    </button>
+  </div>
+  <div class="vote-tip">swipe right = yes · left = skip · up = love</div>
+</section>
+
+<!-- REVEAL -->
+<section class="section" id="reveal-section">
+  <div class="reveal-text">Tallying the Quorum…</div>
+  <div class="reveal-countdown" id="reveal-num">5</div>
+  <div class="reveal-sub">RESULTS INCOMING</div>
+</section>
+
+<!-- RESULTS -->
+<section class="section" id="results-section">
+  <div class="results-inner">
+    <div class="results-header">
+      <div class="results-eyebrow">The Verdict</div>
+      <div class="results-title">Tonight's Picks</div>
     </div>
 
-    <script src="script.js"></script>
+    <!-- Podium (top 3) -->
+    <div class="podium" id="podium"></div>
+
+    <!-- Full ranking -->
+    <div class="ranking-section">
+      <div class="ranking-label">// FULL RANKING · WEIGHTED SCORE</div>
+      <div id="ranking-list"></div>
+    </div>
+
+    <!-- Sentiment matrix -->
+    <div class="matrix-section">
+      <div class="matrix-label">// SENTIMENT MATRIX</div>
+      <div style="overflow-x:auto">
+        <table class="matrix-table" id="sentiment-table"></table>
+      </div>
+    </div>
+
+    <button class="reset-btn" id="reset-btn">↺ NEW SESSION</button>
+  </div>
+</section>
+
+<script>
+/* ======================================================
+   DATA — 38 MOVIE LIBRARY
+====================================================== */
+const movieLibrary = [
+  { id:1,  title:"Dune: Part Two",         genre:"Sci-Fi",      year:2024, director:"Denis Villeneuve",  runtime:"166m", emoji:"🏜️" },
+  { id:2,  title:"Interstellar",           genre:"Sci-Fi",      year:2014, director:"Christopher Nolan", runtime:"169m", emoji:"🌌" },
+  { id:3,  title:"Oppenheimer",            genre:"Drama",       year:2023, director:"Christopher Nolan", runtime:"180m", emoji:"☢️" },
+  { id:4,  title:"The Shawshank Redemption",genre:"Drama",     year:1994, director:"Frank Darabont",    runtime:"142m", emoji:"🔑" },
+  { id:5,  title:"Parasite",               genre:"Thriller",    year:2019, director:"Bong Joon-ho",     runtime:"132m", emoji:"🏠" },
+  { id:6,  title:"Everything Everywhere", genre:"Sci-Fi",      year:2022, director:"Daniels",           runtime:"139m", emoji:"🥯" },
+  { id:7,  title:"The Godfather",          genre:"Crime",       year:1972, director:"F.F. Coppola",     runtime:"175m", emoji:"🌹" },
+  { id:8,  title:"Spirited Away",          genre:"Animation",   year:2001, director:"Hayao Miyazaki",   runtime:"125m", emoji:"🐉" },
+  { id:9,  title:"The Dark Knight",        genre:"Action",      year:2008, director:"Christopher Nolan", runtime:"152m", emoji:"🦇" },
+  { id:10, title:"Mad Max: Fury Road",     genre:"Action",      year:2015, director:"George Miller",    runtime:"120m", emoji:"🚗" },
+  { id:11, title:"Arrival",                genre:"Sci-Fi",      year:2016, director:"Denis Villeneuve",  runtime:"116m", emoji:"🛸" },
+  { id:12, title:"Blade Runner 2049",      genre:"Sci-Fi",      year:2017, director:"Denis Villeneuve",  runtime:"164m", emoji:"🤖" },
+  { id:13, title:"Princess Mononoke",      genre:"Animation",   year:1997, director:"Hayao Miyazaki",   runtime:"134m", emoji:"🐺" },
+  { id:14, title:"La La Land",             genre:"Musical",     year:2016, director:"Damien Chazelle",  runtime:"128m", emoji:"🎹" },
+  { id:15, title:"Whiplash",               genre:"Drama",       year:2014, director:"Damien Chazelle",  runtime:"107m", emoji:"🥁" },
+  { id:16, title:"1917",                   genre:"War",         year:2019, director:"Sam Mendes",       runtime:"119m", emoji:"🪖" },
+  { id:17, title:"The Grand Budapest Hotel",genre:"Comedy",     year:2014, director:"Wes Anderson",     runtime:"99m",  emoji:"🏨" },
+  { id:18, title:"Her",                    genre:"Romance",     year:2013, director:"Spike Jonze",      runtime:"126m", emoji:"💻" },
+  { id:19, title:"Inception",              genre:"Sci-Fi",      year:2010, director:"Christopher Nolan", runtime:"148m", emoji:"🌀" },
+  { id:20, title:"Poor Things",            genre:"Drama",       year:2023, director:"Yorgos Lanthimos", runtime:"141m", emoji:"⚡" },
+  { id:21, title:"Past Lives",             genre:"Romance",     year:2023, director:"Celine Song",      runtime:"106m", emoji:"🌊" },
+  { id:22, title:"The Zone of Interest",   genre:"Drama",       year:2023, director:"Jonathan Glazer",  runtime:"105m", emoji:"🌸" },
+  { id:23, title:"Killers of the Fl. Moon",genre:"Western",     year:2023, director:"Martin Scorsese",  runtime:"206m", emoji:"🌙" },
+  { id:24, title:"Spider-Man: ITSV",       genre:"Animation",   year:2018, director:"P. Lord / R. Persichetti", runtime:"117m", emoji:"🕷️" },
+  { id:25, title:"Get Out",                genre:"Horror",      year:2017, director:"Jordan Peele",     runtime:"104m", emoji:"👁️" },
+  { id:26, title:"Hereditary",             genre:"Horror",      year:2018, director:"Ari Aster",        runtime:"127m", emoji:"🔮" },
+  { id:27, title:"Midsommar",              genre:"Horror",      year:2019, director:"Ari Aster",        runtime:"148m", emoji:"☀️" },
+  { id:28, title:"The Lighthouse",         genre:"Drama",       year:2019, director:"Robert Eggers",    runtime:"110m", emoji:"🏔️" },
+  { id:29, title:"Drive",                  genre:"Crime",       year:2011, director:"Nicolas Winding Refn", runtime:"100m", emoji:"🌃" },
+  { id:30, title:"Moon",                   genre:"Sci-Fi",      year:2009, director:"Duncan Jones",     runtime:"97m",  emoji:"🌕" },
+  { id:31, title:"The Favourite",          genre:"Drama",       year:2018, director:"Yorgos Lanthimos", runtime:"119m", emoji:"🦢" },
+  { id:32, title:"Aftersun",               genre:"Drama",       year:2022, director:"Charlotte Wells",  runtime:"96m",  emoji:"📹" },
+  { id:33, title:"Tár",                    genre:"Drama",       year:2022, director:"Todd Field",       runtime:"158m", emoji:"🎻" },
+  { id:34, title:"RRR",                    genre:"Action",      year:2022, director:"S.S. Rajamouli",   runtime:"187m", emoji:"🦁" },
+  { id:35, title:"Capernaum",              genre:"Drama",       year:2018, director:"Nadine Labaki",    runtime:"126m", emoji:"🏙️" },
+  { id:36, title:"Roma",                   genre:"Drama",       year:2018, director:"Alfonso Cuarón",   runtime:"135m", emoji:"🌧️" },
+  { id:37, title:"Portrait of a Lady…",    genre:"Romance",     year:2019, director:"Céline Sciamma",   runtime:"122m", emoji:"🎨" },
+  { id:38, title:"Triangle of Sadness",    genre:"Comedy",      year:2022, director:"Ruben Östlund",    runtime:"147m", emoji:"⛵" },
+];
+
+/* ======================================================
+   STATE
+====================================================== */
+let players = [];
+let currentPlayerIndex = 0;
+// votes[playerName][movieId] = 'love'|'yes'|'no'
+let votes = {};
+let currentDeck = []; // shuffled movie ids for current player
+let currentCardIndex = 0;
+
+/* ======================================================
+   SECTION MANAGER
+====================================================== */
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+/* ======================================================
+   REGISTRATION
+====================================================== */
+document.getElementById('movie-count-badge').textContent = movieLibrary.length + ' FILMS';
+
+let playerCount = 3;
+document.getElementById('add-player-btn').addEventListener('click', () => {
+  if (playerCount >= 5) return;
+  playerCount++;
+  const fields = document.getElementById('player-fields');
+  const row = document.createElement('div');
+  row.className = 'player-row';
+  row.innerHTML = `
+    <span class="player-num">${String(playerCount).padStart(2,'0')}</span>
+    <input class="player-input optional" type="text" placeholder="Optional" maxlength="20">
+  `;
+  fields.appendChild(row);
+  if (playerCount >= 5) document.getElementById('add-player-btn').style.display = 'none';
+});
+
+document.getElementById('start-btn').addEventListener('click', () => {
+  const inputs = document.querySelectorAll('#player-fields .player-input');
+  players = [];
+  inputs.forEach(inp => {
+    const val = inp.value.trim();
+    if (val) players.push(val);
+  });
+  if (players.length < 2) {
+    alert('Please enter at least 2 player names.');
+    return;
+  }
+  players.forEach(p => { votes[p] = {}; });
+  currentPlayerIndex = 0;
+  showHandoff();
+});
+
+/* ======================================================
+   HANDOFF SCREEN
+====================================================== */
+function showHandoff() {
+  const player = players[currentPlayerIndex];
+  document.getElementById('handoff-name').textContent = player;
+  // Progress dots
+  const prog = document.getElementById('handoff-progress');
+  prog.innerHTML = '';
+  players.forEach((_, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'handoff-dot' +
+      (i < currentPlayerIndex ? ' done' : i === currentPlayerIndex ? ' active' : '');
+    prog.appendChild(dot);
+  });
+  showSection('handoff-section');
+}
+
+document.getElementById('handoff-btn').addEventListener('click', () => {
+  startVoting();
+});
+
+/* ======================================================
+   VOTING
+====================================================== */
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function startVoting() {
+  const player = players[currentPlayerIndex];
+  document.getElementById('vote-player-name').textContent = player.toUpperCase();
+  currentDeck = shuffle(movieLibrary.map(m => m.id));
+  currentCardIndex = 0;
+  renderDeck();
+  updateProgressBar();
+  showSection('vote-section');
+}
+
+function updateProgressBar() {
+  const total = currentDeck.length;
+  const done = currentCardIndex;
+  const pct = (done / total) * 100;
+  document.getElementById('vote-progress-fill').style.width = pct + '%';
+  document.getElementById('vote-count').textContent = done + ' / ' + total;
+}
+
+function renderDeck() {
+  const arena = document.getElementById('card-arena');
+  arena.innerHTML = '';
+  // Show top 3 cards
+  for (let i = 0; i < 3 && currentCardIndex + i < currentDeck.length; i++) {
+    const movieId = currentDeck[currentCardIndex + i];
+    const movie = movieLibrary.find(m => m.id === movieId);
+    const card = buildCard(movie);
+    if (i === 0) {
+      card.classList.add('is-top');
+      attachSwipeEvents(card, movie);
+    } else if (i === 1) {
+      card.classList.add('behind-1');
+    } else {
+      card.classList.add('behind-2');
+    }
+    arena.appendChild(card);
+  }
+}
+
+function buildCard(movie) {
+  const card = document.createElement('div');
+  card.className = 'movie-card';
+  card.dataset.id = movie.id;
+  // Deterministic gradient from movie id
+  const hue = (movie.id * 47 + 130) % 360;
+  card.innerHTML = `
+    <div class="card-poster">
+      <div class="card-poster-bg" style="background: linear-gradient(135deg, hsl(${hue},15%,10%), hsl(${hue},20%,18%))"></div>
+      <div class="card-poster-icon">${movie.emoji}</div>
+      <div class="card-genre-badge">${movie.genre}</div>
+      <div class="card-year-badge">${movie.year}</div>
+    </div>
+    <div class="card-body">
+      <div class="card-title">${movie.title}</div>
+      <div class="card-dir">${movie.director}</div>
+      <div class="card-meta">
+        <div class="card-meta-item">
+          <div class="card-meta-label">Runtime</div>
+          <div class="card-meta-val">${movie.runtime}</div>
+        </div>
+        <div class="card-meta-item">
+          <div class="card-meta-label">Genre</div>
+          <div class="card-meta-val">${movie.genre}</div>
+        </div>
+      </div>
+    </div>
+    <div class="swipe-indicator love"></div>
+    <div class="swipe-indicator yes"></div>
+    <div class="swipe-indicator no"></div>
+    <div class="swipe-label love">Love ❤️</div>
+    <div class="swipe-label yes">Yes 👍</div>
+    <div class="swipe-label no">Skip ✕</div>
+  `;
+  return card;
+}
+
+/* ======================================================
+   SWIPE / POINTER EVENTS
+====================================================== */
+function attachSwipeEvents(card, movie) {
+  let startX = 0, startY = 0, dx = 0, dy = 0;
+  let dragging = false;
+  const THRESHOLD = 100;
+  const ROT_MAX = 20;
+
+  const loveInd  = card.querySelector('.swipe-indicator.love');
+  const yesInd   = card.querySelector('.swipe-indicator.yes');
+  const noInd    = card.querySelector('.swipe-indicator.no');
+  const loveLabel = card.querySelector('.swipe-label.love');
+  const yesLabel  = card.querySelector('.swipe-label.yes');
+  const noLabel   = card.querySelector('.swipe-label.no');
+
+  function resetIndicators() {
+    loveInd.style.opacity = yesInd.style.opacity = noInd.style.opacity = '0';
+    loveLabel.style.opacity = yesLabel.style.opacity = noLabel.style.opacity = '0';
+  }
+
+  card.addEventListener('pointerdown', e => {
+    dragging = true;
+    startX = e.clientX; startY = e.clientY;
+    card.setPointerCapture(e.pointerId);
+    card.style.transition = 'none';
+  });
+
+  card.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    dx = e.clientX - startX;
+    dy = e.clientY - startY;
+    const rot = (dx / window.innerWidth) * ROT_MAX;
+    card.style.transform = `translate(${dx}px, ${dy}px) rotate(${rot}deg)`;
+
+    // Indicators
+    resetIndicators();
+    const progress = Math.min(Math.abs(dx) / THRESHOLD, 1);
+    if (dy < -60 && Math.abs(dx) < 60) {
+      const p = Math.min(Math.abs(dy) / THRESHOLD, 1);
+      loveInd.style.opacity = p;
+      loveLabel.style.opacity = p;
+    } else if (dx > 40) {
+      yesInd.style.opacity = progress;
+      yesLabel.style.opacity = progress;
+    } else if (dx < -40) {
+      noInd.style.opacity = progress;
+      noLabel.style.opacity = progress;
+    }
+  });
+
+  card.addEventListener('pointerup', () => {
+    if (!dragging) return;
+    dragging = false;
+    resetIndicators();
+    card.style.transition = '';
+
+    if (dy < -80 && Math.abs(dx) < 80) {
+      // Love
+      swipeCard(card, movie, 'love', 'up');
+    } else if (dx > THRESHOLD) {
+      // Yes
+      swipeCard(card, movie, 'yes', 'right');
+    } else if (dx < -THRESHOLD) {
+      // No
+      swipeCard(card, movie, 'no', 'left');
+    } else {
+      // Snap back
+      card.classList.add('snap');
+      card.style.transform = '';
+      card.addEventListener('animationend', () => card.classList.remove('snap'), { once: true });
+    }
+    dx = 0; dy = 0;
+  });
+}
+
+function swipeCard(card, movie, vote, dir) {
+  const player = players[currentPlayerIndex];
+  votes[player][movie.id] = vote;
+
+  const cls = dir === 'right' ? 'fly-right' : dir === 'left' ? 'fly-left' : 'fly-up';
+  card.classList.add(cls);
+  card.addEventListener('animationend', () => {
+    card.remove();
+    currentCardIndex++;
+    updateProgressBar();
+    if (currentCardIndex >= currentDeck.length) {
+      // Player done
+      nextPlayer();
+    } else {
+      // Promote next card
+      promoteDeck();
+    }
+  }, { once: true });
+}
+
+function promoteDeck() {
+  const arena = document.getElementById('card-arena');
+  const cards = arena.querySelectorAll('.movie-card');
+  cards.forEach((c, i) => {
+    c.className = 'movie-card';
+    if (i === 0) {
+      c.classList.add('is-top');
+      const movieId = parseInt(c.dataset.id);
+      const movie = movieLibrary.find(m => m.id === movieId);
+      attachSwipeEvents(c, movie);
+    } else if (i === 1) {
+      c.classList.add('behind-1');
+    } else {
+      c.classList.add('behind-2');
+    }
+  });
+
+  // Add a new card at the back if available
+  const nextIdx = currentCardIndex + 2;
+  if (nextIdx < currentDeck.length) {
+    const movieId = currentDeck[nextIdx];
+    const movie = movieLibrary.find(m => m.id === movieId);
+    const newCard = buildCard(movie);
+    newCard.classList.add('behind-2');
+    arena.appendChild(newCard);
+  }
+}
+
+/* ======================================================
+   BUTTON CONTROLS
+====================================================== */
+document.getElementById('btn-no').addEventListener('click', () => doVoteButton('no', 'left'));
+document.getElementById('btn-yes').addEventListener('click', () => doVoteButton('yes', 'right'));
+document.getElementById('btn-love').addEventListener('click', () => doVoteButton('love', 'up'));
+
+function doVoteButton(vote, dir) {
+  const arena = document.getElementById('card-arena');
+  const topCard = arena.querySelector('.movie-card.is-top');
+  if (!topCard) return;
+  const movieId = parseInt(topCard.dataset.id);
+  const movie = movieLibrary.find(m => m.id === movieId);
+  swipeCard(topCard, movie, vote, dir);
+}
+
+/* ======================================================
+   PLAYER PROGRESSION
+====================================================== */
+function nextPlayer() {
+  currentPlayerIndex++;
+  if (currentPlayerIndex >= players.length) {
+    // All done — reveal!
+    showReveal();
+  } else {
+    showHandoff();
+  }
+}
+
+/* ======================================================
+   REVEAL COUNTDOWN
+====================================================== */
+function showReveal() {
+  showSection('reveal-section');
+  let n = 5;
+  document.getElementById('reveal-num').textContent = n;
+  const iv = setInterval(() => {
+    n--;
+    if (n <= 0) {
+      clearInterval(iv);
+      showResults();
+    } else {
+      document.getElementById('reveal-num').textContent = n;
+    }
+  }, 1000);
+}
+
+/* ======================================================
+   RESULTS & SCORING
+====================================================== */
+function computeScores() {
+  const scores = {};
+  movieLibrary.forEach(m => { scores[m.id] = 0; });
+  players.forEach(p => {
+    Object.entries(votes[p] || {}).forEach(([id, v]) => {
+      if (v === 'love') scores[parseInt(id)] += 3;
+      else if (v === 'yes') scores[parseInt(id)] += 1;
+    });
+  });
+  return scores;
+}
+
+function showResults() {
+  showSection('results-section');
+
+  const scores = computeScores();
+  const sorted = movieLibrary
+    .map(m => ({ ...m, score: scores[m.id] }))
+    .sort((a, b) => b.score - a.score);
+
+  buildPodium(sorted);
+  buildRanking(sorted);
+  buildMatrix(sorted);
+  fireConfetti();
+}
+
+function buildPodium(sorted) {
+  const top3 = sorted.slice(0, 3);
+  const podium = document.getElementById('podium');
+  podium.innerHTML = '';
+  const medals = ['🥇','🥈','🥉'];
+  const classes = ['first','second','third'];
+  // Layout: 2nd, 1st, 3rd
+  const order = top3.length >= 3 ? [top3[1], top3[0], top3[2]] : top3;
+  const classOrder = top3.length >= 3 ? [classes[1], classes[0], classes[2]] : classes;
+  const medalOrder = top3.length >= 3 ? [medals[1], medals[0], medals[2]] : medals;
+
+  order.forEach((movie, i) => {
+    if (!movie) return;
+    const item = document.createElement('div');
+    item.className = 'podium-item fade-in-up';
+    item.style.animationDelay = (i * 0.15) + 's';
+    item.innerHTML = `
+      <div class="podium-medal">${medalOrder[i]}</div>
+      <div class="podium-card ${classOrder[i]}">
+        <div class="podium-rank">${classOrder[i].toUpperCase()}</div>
+        <div style="font-size:28px;margin-bottom:6px">${movie.emoji}</div>
+        <div class="podium-title">${movie.title}</div>
+        <div class="podium-score">${movie.score}</div>
+        <div class="podium-score-label">POINTS</div>
+      </div>
+    `;
+    podium.appendChild(item);
+  });
+}
+
+function buildRanking(sorted) {
+  const list = document.getElementById('ranking-list');
+  list.innerHTML = '';
+  // Show movies that got at least 1 vote
+  const voted = sorted.filter(m => m.score > 0);
+  if (voted.length === 0) {
+    list.innerHTML = '<div style="color:var(--text-muted);font-family:var(--font-mono);font-size:12px;padding:16px 0">No votes recorded.</div>';
+    return;
+  }
+  voted.forEach((movie, i) => {
+    const loveVotes = players.filter(p => votes[p][movie.id] === 'love').length;
+    const yesVotes  = players.filter(p => votes[p][movie.id] === 'yes').length;
+    const row = document.createElement('div');
+    row.className = 'ranking-row';
+    row.style.animationDelay = (0.1 + i * 0.05) + 's';
+    row.innerHTML = `
+      <div class="rank-num">${i + 1}</div>
+      <div>
+        <div class="rank-title">${movie.title}</div>
+        <div class="rank-genre">${movie.genre} · ${movie.year}</div>
+      </div>
+      <div class="rank-votes">
+        ${loveVotes > 0 ? `<span class="vote-chip love">❤️ ×${loveVotes}</span>` : ''}
+        ${yesVotes  > 0 ? `<span class="vote-chip yes">👍 ×${yesVotes}</span>`  : ''}
+      </div>
+      <div class="rank-score">${movie.score}</div>
+    `;
+    list.appendChild(row);
+    // Trigger visibility with small delay
+    setTimeout(() => row.classList.add('visible'), 50 + i * 60);
+  });
+}
+
+function buildMatrix(sorted) {
+  const tbl = document.getElementById('sentiment-table');
+  tbl.innerHTML = '';
+  const topMovies = sorted.filter(m => m.score > 0).slice(0, 12);
+
+  // Header row
+  const thead = document.createElement('thead');
+  let hRow = '<tr><th class="movie-col">Film</th>';
+  players.forEach(p => { hRow += `<th>${p.split(' ')[0]}</th>`; });
+  hRow += '</tr>';
+  thead.innerHTML = hRow;
+  tbl.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  topMovies.forEach(movie => {
+    const tr = document.createElement('tr');
+    let row = `<td class="movie-name" title="${movie.title}">${movie.title}</td>`;
+    players.forEach(p => {
+      const v = votes[p][movie.id];
+      const emoji = v === 'love' ? '❤️' : v === 'yes' ? '👍' : '—';
+      const cls = v === 'love' ? 'love' : v === 'yes' ? 'yes' : 'no';
+      row += `<td><span class="sentiment-dot ${cls}">${emoji}</span></td>`;
+    });
+    tr.innerHTML = row;
+    tbody.appendChild(tr);
+  });
+  tbl.appendChild(tbody);
+}
+
+/* ======================================================
+   CONFETTI
+====================================================== */
+function fireConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const colors = ['#c9a84c','#e05c6a','#5cb8a0','#ffffff','#9b7fe8'];
+  const particles = Array.from({ length: 120 }, () => ({
+    x: Math.random() * canvas.width,
+    y: -10 - Math.random() * 100,
+    w: 6 + Math.random() * 8,
+    h: 3 + Math.random() * 4,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    vx: (Math.random() - 0.5) * 3,
+    vy: 2 + Math.random() * 4,
+    angle: Math.random() * Math.PI * 2,
+    va: (Math.random() - 0.5) * 0.15,
+    life: 1
+  }));
+
+  let frame = 0;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      p.angle += p.va;
+      p.vy += 0.06;
+      p.life -= 0.006;
+      if (p.life <= 0 || p.y > canvas.height + 20) {
+        p.y = -10; p.x = Math.random() * canvas.width;
+        p.vy = 2 + Math.random() * 3; p.life = 1;
+      }
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, p.life);
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.angle);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    });
+    frame++;
+    if (frame < 240) requestAnimationFrame(draw);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  draw();
+}
+
+/* ======================================================
+   RESET
+====================================================== */
+document.getElementById('reset-btn').addEventListener('click', () => {
+  players = []; votes = {};
+  currentPlayerIndex = 0; currentDeck = []; currentCardIndex = 0;
+  // Clear form
+  document.querySelectorAll('#player-fields .player-input').forEach(i => i.value = '');
+  showSection('reg-section');
+});
+
+</script>
 </body>
 </html>
