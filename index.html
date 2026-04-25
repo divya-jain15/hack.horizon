@@ -1,55 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Quorum</title>
-  <link rel="stylesheet" href="style.css"/>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Quorum — Group Decision Swipe</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="[fonts.googleapis.com](https://fonts.googleapis.com)">
+    <link rel="preconnect" href="[fonts.gstatic.com](https://fonts.gstatic.com)" crossorigin>
+    <link href="[fonts.googleapis.com](https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap)" rel="stylesheet">
 </head>
 <body>
+    <div class="app-container">
+        <!-- Start Screen -->
+        <section id="start-screen" class="screen active">
+            <div class="screen-content">
+                <div class="logo-container">
+                    <h1 class="logo">Quorum</h1>
+                    <p class="tagline">Swipe together. Decide together.</p>
+                </div>
+                
+                <div class="players-section">
+                    <h2>Add Players</h2>
+                    <p class="hint">2–5 players required</p>
+                    
+                    <div id="players-list" class="players-list"></div>
+                    
+                    <div class="add-player-row">
+                        <input type="text" id="player-input" placeholder="Enter name..." maxlength="20">
+                        <button id="add-player-btn" class="btn-icon" aria-label="Add player">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <p id="player-count" class="player-count">0 / 5 players</p>
+                </div>
+                
+                <button id="start-btn" class="btn-primary" disabled>Start Session</button>
+            </div>
+        </section>
 
-<div id="app">
+        <!-- Voting Screen -->
+        <section id="voting-screen" class="screen">
+            <div class="screen-content">
+                <div class="voting-header">
+                    <h2 id="current-player-name" class="player-turn"></h2>
+                    <div id="progress-indicator" class="progress-indicator"></div>
+                </div>
+                
+                <div class="swipe-hints">
+                    <span class="hint-left">← NO</span>
+                    <span class="hint-up">↑ LOVE</span>
+                    <span class="hint-right">YES →</span>
+                </div>
+                
+                <div id="card-stack" class="card-stack"></div>
+                
+                <div class="swipe-feedback">
+                    <div id="feedback-no" class="feedback-overlay feedback-no">
+                        <span>✕</span>
+                    </div>
+                    <div id="feedback-yes" class="feedback-overlay feedback-yes">
+                        <span>✓</span>
+                    </div>
+                    <div id="feedback-love" class="feedback-overlay feedback-love">
+                        <span>♥</span>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-  <!-- START SCREEN -->
-  <div class="screen active" id="startScreen">
-    <h1 class="title">Quorum</h1>
-    <div id="playersContainer"></div>
-    <button id="addPlayerBtn">+ Add Player</button>
-    <button id="startBtn">Start Session</button>
-  </div>
+        <!-- Player Transition Screen -->
+        <section id="transition-screen" class="screen">
+            <div class="screen-content transition-content">
+                <p class="transition-text">Pass the device to</p>
+                <h2 id="next-player-name" class="next-player-name"></h2>
+                <button id="start-turn-btn" class="btn-primary">Start My Turn</button>
+            </div>
+        </section>
 
-  <!-- VOTING SCREEN -->
-  <div class="screen" id="votingScreen">
-    <div class="header">
-      <h2 id="playerTurn"></h2>
-      <span id="progress"></span>
+        <!-- Countdown Screen -->
+        <section id="countdown-screen" class="screen">
+            <div class="screen-content countdown-content">
+                <p class="calculating-text">Calculating results...</p>
+                <div id="countdown-number" class="countdown-number">3</div>
+            </div>
+        </section>
+
+        <!-- Results Screen -->
+        <section id="results-screen" class="screen">
+            <div class="screen-content results-content">
+                <h2 class="results-title">The Winner</h2>
+                
+                <div id="winner-card" class="winner-card"></div>
+                
+                <div id="top-results" class="top-results"></div>
+                
+                <button id="restart-btn" class="btn-secondary">Start New Session</button>
+            </div>
+            
+            <canvas id="confetti-canvas"></canvas>
+        </section>
     </div>
 
-    <div class="card-stack" id="cardStack"></div>
-  </div>
-
-  <!-- TRANSITION SCREEN -->
-  <div class="screen" id="transitionScreen">
-    <div class="transition-box">
-      <h2>Pass device</h2>
-      <p id="nextPlayerText"></p>
-      <button id="startTurnBtn">Start Turn</button>
-    </div>
-  </div>
-
-  <!-- RESULT SCREEN -->
-  <div class="screen" id="resultScreen">
-    <div id="countdown">3</div>
-    <div id="resultsContent" class="hidden">
-      <h1>Winner</h1>
-      <div id="winnerCard"></div>
-      <div id="topList"></div>
-      <button onclick="location.reload()">Restart</button>
-    </div>
-  </div>
-
-</div>
-
-<script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
