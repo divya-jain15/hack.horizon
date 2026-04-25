@@ -287,7 +287,7 @@
     position: relative; overflow: hidden;
     display: flex; align-items: center; justify-content: center;
   }
-  .card.innerHTML {
+  .card-poster-bg {
     position: absolute; inset: 0;
     background: linear-gradient(135deg, var(--surface2), var(--bg));
   }
@@ -903,7 +903,7 @@ function buildCard(movie) {
   background-position: center top;
   background-color: hsl(${hue},15%,10%);
 "></div>
-      <div class="card-poster-icon">${movie.emoji}</div>
+      <div class="card-poster-icon" style="display:none">${movie.emoji}</div>
       <div class="card-genre-badge">${movie.genre}</div>
       <div class="card-year-badge">${movie.year}</div>
     </div>
