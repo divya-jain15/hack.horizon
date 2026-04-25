@@ -1,11 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <title>Quorum</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    
+
+<div id="app">
+
+  <!-- Start Screen -->
+  <div id="startScreen">
+    <h1>Quorum</h1>
+    <div id="players"></div>
+    <button onclick="addPlayer()">+ Add Player</button>
+    <button onclick="startGame()">Start</button>
+  </div>
+
+  <!-- Voting Screen -->
+  <div id="votingScreen" class="hidden">
+    <h2 id="playerTurn"></h2>
+    <div id="card"></div>
+  </div>
+
+  <!-- Result Screen -->
+  <div id="resultScreen" class="hidden">
+    <h1 id="winner"></h1>
+    <div id="ranking"></div>
+    <button onclick="location.reload()">Restart</button>
+  </div>
+
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>
