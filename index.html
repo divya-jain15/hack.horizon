@@ -1,33 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Quorum</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
 
 <div id="app">
 
-  <!-- Start Screen -->
-  <div id="startScreen">
-    <h1>Quorum</h1>
-    <div id="players"></div>
-    <button onclick="addPlayer()">+ Add Player</button>
-    <button onclick="startGame()">Start</button>
+  <!-- START SCREEN -->
+  <div class="screen active" id="startScreen">
+    <h1 class="title">Quorum</h1>
+    <div id="playersContainer"></div>
+    <button id="addPlayerBtn">+ Add Player</button>
+    <button id="startBtn">Start Session</button>
   </div>
 
-  <!-- Voting Screen -->
-  <div id="votingScreen" class="hidden">
-    <h2 id="playerTurn"></h2>
-    <div id="card"></div>
+  <!-- VOTING SCREEN -->
+  <div class="screen" id="votingScreen">
+    <div class="header">
+      <h2 id="playerTurn"></h2>
+      <span id="progress"></span>
+    </div>
+
+    <div class="card-stack" id="cardStack"></div>
   </div>
 
-  <!-- Result Screen -->
-  <div id="resultScreen" class="hidden">
-    <h1 id="winner"></h1>
-    <div id="ranking"></div>
-    <button onclick="location.reload()">Restart</button>
+  <!-- TRANSITION SCREEN -->
+  <div class="screen" id="transitionScreen">
+    <div class="transition-box">
+      <h2>Pass device</h2>
+      <p id="nextPlayerText"></p>
+      <button id="startTurnBtn">Start Turn</button>
+    </div>
+  </div>
+
+  <!-- RESULT SCREEN -->
+  <div class="screen" id="resultScreen">
+    <div id="countdown">3</div>
+    <div id="resultsContent" class="hidden">
+      <h1>Winner</h1>
+      <div id="winnerCard"></div>
+      <div id="topList"></div>
+      <button onclick="location.reload()">Restart</button>
+    </div>
   </div>
 
 </div>
