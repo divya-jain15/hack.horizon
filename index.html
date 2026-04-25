@@ -276,7 +276,7 @@
     position: relative; overflow: hidden;
     display: flex; align-items: center; justify-content: center;
   }
-  .card-poster-bg {
+  .card.innerHTML {
     position: absolute; inset: 0;
     background: linear-gradient(135deg, var(--surface2), var(--bg));
   }
@@ -886,7 +886,12 @@ function buildCard(movie) {
   const hue = (movie.id * 47 + 130) % 360;
   card.innerHTML = `
     <div class="card-poster">
-      <div class="card-poster-bg" style="background: linear-gradient(135deg, hsl(${hue},15%,10%), hsl(${hue},20%,18%))"></div>
+      <div class="card-poster-bg" style="
+  background-image: url('posters/${movie.id}.jpg');
+  background-size: cover;
+  background-position: center top;
+  background-color: hsl(${hue},15%,10%);
+"></div>
       <div class="card-poster-icon">${movie.emoji}</div>
       <div class="card-genre-badge">${movie.genre}</div>
       <div class="card-year-badge">${movie.year}</div>
